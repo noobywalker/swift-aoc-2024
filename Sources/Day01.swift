@@ -8,13 +8,10 @@ struct Day01: AdventDay {
     var lList: [Int?] = []
     var rList: [Int?] = []
     data.split(separator: "\n")
-      .map {
-        $0.split(separator: "   ")
-          .compactMap { Int($0) }
-      }
-      .forEach { pairs in
-        lList.append(pairs.first)
-        rList.append(pairs.last)
+      .forEach {
+        let pair = $0.split(separator: "   ").compactMap { Int($0) }
+        lList.append(pair.first)
+        rList.append(pair.last)
       }
     return (
       lList: lList.compactMap { $0 },
@@ -109,10 +106,10 @@ struct Day01: AdventDay {
   func part2() -> Any {
     var dictionary: [Int: Int] = [:]
     entities.rList.forEach {
-      dictionary[$0] = (dictionary[$0] ?? 0) + 1
+      dictionary[$0] = dictionary[$0, default: 0] + 1
     }
     return entities.lList.reduce(0) { partialResult, num in
-      partialResult + (num * (dictionary[num] ?? 0))
+      partialResult + (num * dictionary[num, default: 0])
     }
   }
 }
