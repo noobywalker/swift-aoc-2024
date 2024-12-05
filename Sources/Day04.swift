@@ -55,14 +55,14 @@ struct Day04: AdventDay {
   }
 
   enum SearchMode {
-    case horizontal, vertical, diagonal
+    case horizontal, vertical, diagonal, cross
   }
 
   enum Direction {
     case vertical, diagonalLeft, diagonalRight
   }
 
-  func search(mode: SearchMode, type: WordType) -> Int {
+  func searchXMAS(mode: SearchMode, type: WordType) -> Int {
     switch mode {
     case .horizontal:
       let regex = type == .normal ? /XMAS/ : /SAMX/
@@ -73,6 +73,8 @@ struct Day04: AdventDay {
       return searchVertical(word: "XMAS", type: type)
     case .diagonal:
       return searchDiagonal(word: "XMAS", type: type)
+    case .cross:
+      return searchCross(word: "MAS")
     }
   }
 
@@ -93,12 +95,37 @@ struct Day04: AdventDay {
     return result
   }
 
+
+  func searchCross(word: String) -> Int {
+    var matchCount = 0
+    let data = entities.map { Array($0).map { String($0) } }
+    let expected = word
+    let expectedReversed = String(word.reversed())
+    let letters = Array(expected).map { String($0) }
+    let middleIndex = letters.count / 2
+    let middleLetter = letters[middleIndex]
+
+    for i in 0..<data.count {
+      for j in 0..<data[i].count {
+        if data[i][j] == middleLetter {
+          if i - middleIndex >= 0 && j - middleIndex >= 0 && j + middleIndex < data[i].count {
+            let dRight = getWord(from: data, at: (i - middleIndex, j - middleIndex), direction: .diagonalRight, nextCharacters: letters.count - 1)
+            let dLeft = getWord(from: data, at: (i - middleIndex, j + middleIndex), direction: .diagonalLeft, nextCharacters: letters.count - 1)
+            if (dRight == expected || dRight == expectedReversed) && (dLeft == expected || dLeft == expectedReversed) {
+              matchCount += 1
+            }
+          }
+        }
+      }
+    }
+    return matchCount
+  }
+
   func searchDiagonal(word: String, type: WordType) -> Int {
     var matchCount = 0
     let data = entities.map { Array($0).map { String($0) } }
     let expected = type == .normal ? word : String(word.reversed())
     let letters = Array(expected).map { String($0) }
-
     for i in 0..<data.count {
       for j in 0..<data[i].count {
         if data[i][j] == letters.first {
@@ -132,12 +159,12 @@ struct Day04: AdventDay {
   }
 
   func part1() -> Any {
-    return search(mode: .horizontal, type: .normal)
-    + search(mode: .horizontal, type: .backwards)
-    + search(mode: .vertical, type: .normal)
-    + search(mode: .vertical, type: .backwards)
-    + search(mode: .diagonal, type: .normal)
-    + search(mode: .diagonal, type: .backwards)
+    return searchXMAS(mode: .horizontal, type: .normal)
+    + searchXMAS(mode: .horizontal, type: .backwards)
+    + searchXMAS(mode: .vertical, type: .normal)
+    + searchXMAS(mode: .vertical, type: .backwards)
+    + searchXMAS(mode: .diagonal, type: .normal)
+    + searchXMAS(mode: .diagonal, type: .backwards)
   }
 
   /**
@@ -169,6 +196,6 @@ struct Day04: AdventDay {
    */
 
   func part2() -> Any {
-    return 0
+    return searchXMAS(mode: .cross, type: .normal)
   }
 }
