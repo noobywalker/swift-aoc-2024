@@ -9,14 +9,15 @@ struct Day05: AdventDay {
     var rules: [Int: Set<Int>] = [:]
     chunk.first?.split(separator: "\n").forEach {
       let pair = $0.components(separatedBy: "|").compactMap { Int($0) }
-      if let before = pair.first, let after = pair.last {
-        var pages = rules[before] ?? []
+      if let page = pair.first, let after = pair.last {
+        var pages = rules[page] ?? []
         pages.insert(after)
-        rules[before] = pages
+        rules[page] = pages
       }
     }
     let printOrders = chunk.last?.split(separator: "\n")
-      .map { $0.split(separator: ",").compactMap { Int($0) } } ?? []
+      .map { $0.split(separator: ",")
+      .compactMap { Int($0) } } ?? []
     return (rules, printOrders)
   }
 
@@ -100,19 +101,19 @@ struct Day05: AdventDay {
 
   func part1() -> Any {
     let (rules, printOrders) = entities
-    var sumMiddlePageNumber = 0
-    printOrders.forEach { order in
+    return printOrders.map { order in
       for i in 0..<order.count - 1 {
         let nextPages = order.dropFirst(i + 1)
         guard let pages = rules[order[i]], pages.intersection(nextPages).count == nextPages.count else {
-          break
+          return 0
         }
         if i == order.count - 2 {
-          sumMiddlePageNumber += order[order.count / 2]
+          return order[order.count / 2]
         }
       }
+      return 0
     }
-    return sumMiddlePageNumber
+    .reduce(0, +)
   }
 
   /**
@@ -131,6 +132,18 @@ struct Day05: AdventDay {
    */
 
   func part2() -> Any {
-    0
+    let (rules, printOrders) = entities
+    return printOrders.map { order -> Int in
+      for i in 0..<order.count - 1 {
+        let nextPages = order.dropFirst(i + 1)
+        guard let pages = rules[order[i]], pages.intersection(nextPages).count == nextPages.count else {
+          let sortedOrder = order.sorted {
+            rules[$0]?.contains($1) == true
+          }
+          return sortedOrder[sortedOrder.count / 2]
+        }
+      }
+      return 0
+    }.reduce(0, +)
   }
 }
