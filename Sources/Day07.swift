@@ -53,12 +53,7 @@ struct Day07: AdventDay {
     var sum = 0
     for expected in entities.keys {
       if let numbers = entities[expected] {
-        let result: [Int] = numbers.reduce([]) { current, num in
-          if current.isEmpty {
-            return [num]
-          }
-          return current.map { $0 + num } + current.map { $0 * num }
-        }
+        let result = operators(numbers: numbers)
         if result.contains(expected) {
           sum += expected
         }
@@ -85,6 +80,32 @@ struct Day07: AdventDay {
    */
 
   func part2() -> Any {
-    0
+    var sum = 0
+    for expected in entities.keys {
+      if let numbers = entities[expected] {
+        let result = operators(numbers: numbers, withConcatenation: true)
+        if result.contains(expected) {
+          sum += expected
+        }
+      }
+    }
+    return sum
+  }
+
+  private func operators(numbers: [Int], withConcatenation: Bool = false ) -> [Int] {
+    numbers.reduce([]) { current, num in
+      if current.isEmpty {
+        return [num]
+      }
+
+      let plus = current.map { $0 + num }
+      let multiply = current.map { $0 * num }
+      if withConcatenation {
+        let concatenation = current.compactMap { Int("\($0)\(num)") }
+        return plus + multiply + concatenation
+      } else {
+        return plus + multiply
+      }
+    }
   }
 }
