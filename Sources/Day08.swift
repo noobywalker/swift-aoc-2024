@@ -2,7 +2,11 @@ import Algorithms
 
 struct Day08: AdventDay {
 
-  typealias Position = (row: Int, col: Int)
+  struct Position {
+    let row: Int
+    let col: Int
+  }
+
   var data: String
 
   var parsedData: (entities: [String: [Position]], maxRow: Int, maxCol: Int) {
@@ -16,7 +20,7 @@ struct Day08: AdventDay {
       for char in line.element.enumerated() {
         if char.element != "." && char.element != "#" {
           var array = dic[String(char.element)] ?? []
-          array.append(Position(line.offset, char.offset))
+          array.append(Position(row: line.offset, col: char.offset))
           dic[String(char.element)] = array
         }
       }
@@ -104,7 +108,14 @@ struct Day08: AdventDay {
    */
 
   func part1() -> Any {
-    var sum = 0
+    return findAntinodeCount(for: .single)
+  }
+
+  enum NodeType {
+    case single, line
+  }
+
+  private func findAntinodeCount(for nodeType: NodeType) -> Int {
     let (antennas, maxRow, maxCol) = parsedData
     var check: [Position] = []
     for (_, positions) in antennas {
@@ -114,30 +125,82 @@ struct Day08: AdventDay {
         for next in tempPositions {
           let dRow = pos.row - next.row
           let dCol = pos.col - next.col
-          debugPrint("---\(pos) \(next)")
-          let nRow = pos.row + dRow
-          let nCol = pos.col + dCol
-          if nRow < maxRow && nRow >= 0 && nCol < maxCol && nCol >= 0
-              && !(check.contains(where: {  $0.row == nRow && $0.col == nCol})) {
-              sum += 1
-              debugPrint("pass \(nRow), \(nCol)")
-              check.append(Position(nRow, nCol))
+          var nRow = pos.row
+          var nCol = pos.col
+
+          var proceed = true
+          while proceed {
+            nRow += dRow
+            nCol += dCol
+            let nPos = Position(row: nRow, col: nCol)
+            let isWithInbounds = nRow < maxRow && nRow >= 0 && nCol < maxCol && nCol >= 0
+            if isWithInbounds && !check.contains(nPos) {
+              check.append(nPos)
+            }
+            proceed = nodeType != .single && isWithInbounds
           }
-          debugPrint("------------")
+
+          if nodeType == .line {
+            if !check.contains(pos) {
+              check.append(pos)
+            }
+            if !check.contains(next) {
+              check.append(next)
+            }
+          }
         }
       }
     }
-
-    return sum
+    return check.count
   }
-
   /**
    --- Part Two ---
+
+   Watching over your shoulder as you work, one of The Historians asks if you took the effects of resonant harmonics into your calculations.
+
+   Whoops!
+
+   After updating your model, it turns out that an antinode occurs at any grid position exactly in line with at least two antennas of the same frequency, regardless of distance. This means that some of the new antinodes will occur at the position of each antenna (unless that antenna is the only one of its frequency).
+
+   So, these three T-frequency antennas now create many antinodes:
+
+   T....#....
+   ...T......
+   .T....#...
+   .........#
+   ..#.......
+   ..........
+   ...#......
+   ..........
+   ....#.....
+   ..........
+   In fact, the three T-frequency antennas are all exactly in line with two antennas, so they are all also antinodes! This brings the total number of antinodes in the above example to 9.
+
+   The original example now has 34 antinodes, including the antinodes that appear on every antenna:
+
+   ##....#....#
+   .#.#....0...
+   ..#.#0....#.
+   ..##...0....
+   ....0....#..
+   .#...#A....#
+   ...#..#.....
+   #....#.#....
+   ..#.....A...
+   ....#....A..
+   .#........#.
+   ...#......##
+   Calculate the impact of the signal using this updated model. How many unique locations within the bounds of the map contain an antinode?
 
    */
 
   func part2() -> Any {
-    var sum = 0
-    return sum
+    findAntinodeCount(for: .line)
+  }
+}
+
+extension Day08.Position: Equatable {
+  static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.col == rhs.col && lhs.row == rhs.row
   }
 }
